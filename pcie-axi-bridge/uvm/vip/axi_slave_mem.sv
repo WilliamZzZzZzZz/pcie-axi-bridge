@@ -1,0 +1,94 @@
+`ifndef AXI_SLAVE_MEM_SV
+`define AXI_SLAVE_MEM_SV
+
+class axi_slave_mem #(
+    parameter int ADDR_WIDTH = 32,
+    parameter int DATA_WIDTH = 32,
+    parameter int STRB_WIDTH = (DATA_WIDTH/8)
+) extends uvm_object;
+
+    `uvm_object_utils(axi_slave_mem#(ADDR_WIDTH, DATA_WIDTH, STRB_WIDTH))
+
+    axi_configuration cfg;
+    bit [DATA_WIDTH - 1:0] default_word_value = '0;
+    bit [DATA_WIDTH - 1:0] data [bit [ADDR_WIDTH - 1:0]];
+
+    function new(string name = "axi_slave_mem");
+        super.new(name);
+    endfunction
+
+    function bit [DATA_WIDTH -1:0] read_word(bit [ADDR_WIDTH - 1:0] word_addr);
+        return data.exists(word_addr) ? data[word_addr] : default_word_value;
+    endfunction
+
+    //store data with strb into mem word-by-word
+    function void write_word_with_strb(
+        bit [ADDR_WIDTH - 1:0] word_addr,
+        bit [DATA_WIDTH - 1:0] new_data,
+        bit [STRB_WIDTH - 1:0] wstrb
+    );
+        bit [DATA_WIDTH - 1:0] old_data;
+        bit [DATA_WIDTH - 1:0] updated_word;
+
+        old_data = data.exists(word_addr) ? data[word_addr] : default_word_value;
+        updated_word = old_data;
+
+        for (int lane = 0; lane < STRB_WIDTH; lane++) begin
+            if(wstrb[lane])
+                updated_word[lane*8 +: 8] = new_data[lane*8 +: 8];
+        end
+
+        data[word_addr] = updated_word;
+    endfunction
+
+    //calculate every beat's actual addr
+    static function bit [ADDR_WIDTH - 1:0] calc_beat_addr(
+        bit [ADDR_WIDTH - 1:0] base_addr,
+        burst_len_enum         burst_len,
+        burst_type_enum        burst_type,
+        burst_size_enum        burst_size,
+        int                    beat_idx
+    );
+        int unsigned           stride;
+        int unsigned           total_bytes;
+        bit [ADDR_WIDTH - 1:0] aligned_start;
+        bit [ADDR_WIDTH - 1:0] addr;
+        bit [ADDR_WIDTH - 1:0] wrap_low;
+        bit [ADDR_WIDTH - 1:0] wrap_high;
+
+        stride = 1 << int'(burst_size);
+        aligned_start = (base_addr / stride) * stride;
+
+        case (burst_type)
+            FIXED: begin    //FIXED
+                addr = base_addr;
+            end
+            INCR: begin    //INCR
+                if(beat_idx == 0)
+                    addr = base_addr;
+                else
+                    addr = aligned_start + (beat_idx * stride);
+            end
+            WRAP: begin    //WRAP
+                total_bytes = (int'(burst_len) + 1) * stride;
+                wrap_low    = (base_addr / total_bytes) * total_bytes;
+                wrap_high   = wrap_low + total_bytes;
+                addr        = base_addr + (beat_idx * stride);
+                if (addr >= wrap_high)
+                    addr = addr - total_bytes;
+            end
+            default: begin
+                addr = base_addr;
+                $error("calc_beat_addr: burst_type = %0b is illegal", burst_type);
+            end
+        endcase
+        return addr;
+    endfunction
+
+    function void clear();
+        data.delete();
+    endfunction
+
+endclass
+
+`endif 

@@ -1,0 +1,128 @@
+{
+    "files.associations": {
+        "*.sv": "systemverilog",
+        "*.svh": "systemverilog",
+        "*.v": "verilog",
+        "*.vh": "verilog"
+    },
+    "systemverilog.disableIndexing": false,
+    "systemverilog.includeIndexing": [
+        "dut/**/*.{v,vh,sv,svh}",
+        "uvm/vip/**/*.{v,vh,sv,svh}",
+        "uvm/env/**/*.{v,vh,sv,svh}",
+        "uvm/seq_lib/**/*.{v,vh,sv,svh}",
+        "uvm/test/**/*.{v,vh,sv,svh}",
+        "uvm/testbench/**/*.{v,vh,sv,svh}"
+    ],
+    "systemverilog.excludeIndexing": "**/{out,csrc,simv.daidir,verdiLog,work,xcelium.d,*.daidir}/**",
+    "systemverilog.forceFastIndexing": false,
+    "systemverilog.enableIncrementalIndexing": true,
+    "systemverilog.maxLineCountIndexing": 10000,
+    "systemverilog.documentSymbolsPrecision": "full",
+    "systemverilog.compilerType": "VCS",
+    "systemverilog.launchConfigurationVCS": "cd uvm/sim && make comp",
+    "verilog.linting.linter": "none",
+    "verilog.linting.verilator.includePath": [
+        "dut",
+        "uvm/vip",
+        "uvm/vip/seq_lib",
+        "uvm/env",
+        "uvm/seq_lib",
+        "uvm/seq_lib/element_seq",
+        "uvm/test",
+        "uvm/testbench"
+    ],
+    "verilog.linting.slang.includePath": [
+        "dut",
+        "uvm/vip",
+        "uvm/vip/seq_lib",
+        "uvm/env",
+        "uvm/seq_lib",
+        "uvm/seq_lib/element_seq",
+        "uvm/test",
+        "uvm/testbench"
+    ],
+    "verilog.linting.iverilog.includePath": [
+        "dut",
+        "uvm/vip",
+        "uvm/vip/seq_lib",
+        "uvm/env",
+        "uvm/seq_lib",
+        "uvm/seq_lib/element_seq",
+        "uvm/test",
+        "uvm/testbench"
+    ],
+    "verilog.linting.xvlog.includePath": [
+        "dut",
+        "uvm/vip",
+        "uvm/vip/seq_lib",
+        "uvm/env",
+        "uvm/seq_lib",
+        "uvm/seq_lib/element_seq",
+        "uvm/test",
+        "uvm/testbench"
+    ],
+    "[systemverilog]": {
+        "editor.quickSuggestions": {
+            "other": "on",
+            "comments": "off",
+            "strings": "off"
+        },
+        "editor.quickSuggestionsDelay": 0,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.snippetSuggestions": "top",
+        "editor.suggest.showSnippets": true,
+        "editor.suggest.showKeywords": true,
+        "editor.suggest.showWords": true,
+        "editor.suggest.localityBonus": true,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "on",
+        "editor.wordBasedSuggestions": "allDocuments",
+        "editor.parameterHints.enabled": true
+    },
+    "[verilog]": {
+        "editor.quickSuggestions": {
+            "other": "on",
+            "comments": "off",
+            "strings": "off"
+        },
+        "editor.quickSuggestionsDelay": 0,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.snippetSuggestions": "top",
+        "editor.suggest.showSnippets": true,
+        "editor.suggest.showKeywords": true,
+        "editor.suggest.showWords": true,
+        "editor.suggest.localityBonus": true,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "on",
+        "editor.wordBasedSuggestions": "allDocuments",
+        "editor.parameterHints.enabled": true
+    },
+    "search.exclude": {
+        "**/.git": true,
+        "**/csrc": true,
+        "**/simv.daidir": true,
+        "**/verdiLog": true,
+        "**/work": true,
+        "**/xcelium.d": true,
+        "**/*.daidir": true,
+        "**/*.fsdb": true,
+        "**/*.vcd": true,
+        "**/*.vdb": true,
+        "**/*.wdb": true,
+        "**/*.log": true
+    },
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/csrc/**": true,
+        "**/simv.daidir/**": true,
+        "**/verdiLog/**": true,
+        "**/work/**": true,
+        "**/xcelium.d/**": true,
+        "**/*.daidir/**": true,
+        "**/*.fsdb": true,
+        "**/*.vcd": true,
+        "**/*.vdb": true,
+        "**/*.wdb": true
+    }
+}
