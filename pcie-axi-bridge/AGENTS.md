@@ -1,73 +1,70 @@
-# SystemVerilog/UVM Digital Verification Agent Rules
+# PCIe AXI Bridge UVM Agent Rules
+
+## Authoritative Skill
+
+Use the embedded project skill as the primary instruction source:
+
+```text
+.agents/skills/pcie-axi-uvm-verification/SKILL.md
+```
+
+This project is no longer an AXI crossbar verification project. Any old AXI crossbar, generic DV, or `dv-ask-engineering-analysis` guidance is not authoritative for this repository.
 
 ## Project Role
 
-This repository is treated as a SystemVerilog/UVM digital verification project by default. Agents should reason as senior DV engineers working with RTL, UVM testbench architecture, AMBA AXI/APB/AHB, PCIe-style transaction protocols, scoreboards, monitors, drivers, sequences, assertions, functional coverage, regressions, waveforms, and simulator logs.
+Treat this repository as a SystemVerilog/UVM verification project for the `pcie_axi_master` DUT from `alexforencich/verilog-pcie`.
 
-Stay focused on digital verification. General software guidance is relevant only when it supports verification infrastructure such as Makefiles, simulator scripts, log parsing, regression triage, or coverage/report automation.
+The expected model is:
 
-## Default Behavior
+```text
+TB PCIe requester VIP
+  -> rx_req_tlp_* request TLP stream
+  -> DUT pcie_axi_master as PCIe completer-side bridge
+  -> m_axi_* AXI full master interface
+  -> TB AXI slave VIP + memory model
 
-- Prefer Ask-mode engineering analysis over code generation.
-- Do not edit files for analysis-only requests.
-- Do not assume the user wants refactoring, redesign, cleanup, or non-DV software advice.
-- Separate facts observed in files from assumptions or protocol inferences.
-- Cite relevant file paths, modules, classes, functions, tasks, signals, sequences, transactions, or assertions when explaining code.
-- Preserve existing architecture unless the user explicitly asks for redesign.
+Read return:
+TB AXI slave R channel
+  -> DUT
+  -> tx_cpl_tlp_* completion TLP stream
+  -> TB PCIe completion monitor/sink
+```
 
-## Ask-Mode Rules
+The DUT is a transaction-layer PCIe TLP-to-AXI bridge. It is not a full PCIe controller, PHY, LTSSM, DLLP/replay/credit engine, config-space model, or commercial PCIe VIP replacement.
 
-- Start with the direct conclusion.
-- Explain the relevant protocol, UVM, RTL, or verification principle.
-- Map the principle to the current code or scenario.
-- Identify risks, ambiguity, missing checks, and evidence needed.
-- Prefer cycle-by-cycle, beat-by-beat, transaction-by-transaction, or component-by-component reasoning when useful.
-- Do not propose edits before the behavior and failure mechanism are understood.
+## Required Startup
 
-## Agent/Edit-Mode Rules
+Before code changes, inspect the real files and run the project check when practical:
 
-- Edit only when the user explicitly asks for code changes.
-- Before editing, summarize the intended small change.
-- Make the smallest reviewable diff that solves the stated problem.
-- Do not rewrite UVM architecture, rename broad interfaces/classes, change transaction ownership, or reformat unrelated files unless requested.
-- After editing, summarize changed files and validation performed.
-- Run available compile, lint, simulation, unit test, or regression commands when reasonable. If they cannot be run, state why.
+```bash
+python3 .agents/skills/pcie-axi-uvm-verification/scripts/check_pcie_axi_uvm_project.py .
+```
 
-## SystemVerilog Rules
+Then read only the relevant reference:
 
-- Respect clock/reset discipline and existing style.
-- Use nonblocking assignments for sequential logic and blocking assignments for combinational logic unless the local style deliberately differs.
-- Check reset behavior, default assignments, latch risks, width/sign issues, enum/state completeness, and CDC assumptions.
-- Do not infer protocol legality from one waveform or one test unless the protocol rule supports it.
-- Treat assertions and coverage as verification intent; keep them aligned with spec and implementation.
+- `.agents/skills/pcie-axi-uvm-verification/references/project-map.md`
+- `.agents/skills/pcie-axi-uvm-verification/references/pcie-dut-model.md`
+- `.agents/skills/pcie-axi-uvm-verification/references/uvm-implementation-rules.md`
+- `.agents/skills/pcie-axi-uvm-verification/references/agent-discipline.md`
 
-## UVM Rules
+## Work Rules
 
-- Keep driver, monitor, sequencer, scoreboard, coverage, and env responsibilities separate.
-- Monitors should be passive observers; scoreboards should be independent checkers.
-- Respect UVM phase discipline: build/connect for structure, run for time-consuming behavior, report/check for summaries.
-- Check factory registration, config_db set/get scope, TLM analysis connections, objections, sequence-driver handshake, reset synchronization, and transaction field consistency.
-- Avoid hiding design bugs by weakening scoreboard checks or over-constraining sequences.
+- Distinguish facts observed in files from PCIe/UVM inferences.
+- Preserve the migrated AXI VIP architecture unless the user explicitly requests redesign.
+- Keep PCIe VIP transaction-layer only for the first stage: `MRd`, `MWr`, `Cpl`, `CplD`, optional unsupported-request checks.
+- Keep Digest/ECRC disabled in first-stage VIP: `TD=0`.
+- Treat `TC`, `Attr`, `requester_id`, `completer_id`, and `tag` as real TLP header fields.
+- Reuse the existing AXI VIP for the downstream AXI slave and memory model where possible.
+- Make small reviewable diffs and run available compile/smoke checks when practical.
 
-## Protocol Reasoning Rules
+## Validation Priority
 
-- Distinguish protocol requirements from implementation choices and VIP behavior.
-- For AXI, reason per independent channel: AW, W, B, AR, R.
-- VALID must not depend combinationally on READY in a way that violates handshake independence.
-- Analyze burst address progression, WSTRB byte lanes, ordering, outstanding transactions, responses, and backpressure explicitly.
-- For APB, reason through setup/access phases, PSEL/PENABLE/PREADY/PSLVERR timing, and byte lane behavior.
-- For AHB, reason through address/data phase pipelining, HREADY/HRESP timing, burst progression, and transfer type legality.
-- For PCIe-style questions, separate transaction-layer packet semantics, ordering/completion behavior, flow control, and verification model assumptions.
+Validate in this order:
 
-## Validation Rules
+1. Static project check script
+2. SystemVerilog compile/package include order
+3. DUT/interface port connection sanity
+4. Smoke test for one MWr and one MRd
+5. Scoreboard checks for MWr-to-AXI write and MRd-to-AXI read-to-CplD
 
-- Prefer existing Makefile, simulator scripts, regression targets, lint targets, and README commands.
-- If no command is obvious, report the missing validation path instead of inventing one.
-- For failures, preserve logs and explain the first actionable error.
-
-## Output Format Rules
-
-- Be concise but technical.
-- Use bullets or short sections when they improve scanability.
-- For reviews, lead with bugs/risks before suggestions.
-- For code explanations, include exact paths and symbols whenever available.
+If simulator or license setup blocks validation, state that directly.

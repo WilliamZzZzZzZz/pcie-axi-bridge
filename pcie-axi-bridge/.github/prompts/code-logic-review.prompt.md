@@ -1,9 +1,9 @@
 ---
 agent: "ask"
-description: "Review selected RTL, SystemVerilog class logic, UVM component logic, protocol handling, or scoreboard comparison logic."
+description: "Review selected RTL, SystemVerilog, UVM, PCIe TLP, AXI bridge, monitor, driver, sequence, or scoreboard logic."
 ---
 
-Review this SystemVerilog, RTL, UVM, protocol, checker, monitor, driver, sequence, or scoreboard logic as a digital verification reviewer.
+Review this PCIe AXI bridge verification code as a digital verification reviewer.
 
 Code, intent, or file references:
 ${input:code_or_intent:Paste selected code, describe intended behavior, or reference files/signals/classes}
@@ -14,15 +14,15 @@ Please answer:
    - Explain what the code currently does.
 
 2. **Intended Behavior Match**
-   - State whether it matches the intended behavior.
-   - Identify any assumption needed to make that conclusion.
+   - Compare it against the PCIe TLP-to-AXI bridge model.
+   - State any assumptions needed.
 
 3. **Corner Cases**
-   - Check reset, timing, burst/transaction boundaries, width/sign handling, empty/full conditions, ordering, backpressure, X/Z behavior, and invalid/rare protocol states.
+   - Check reset, handshake timing, packet boundaries, TLP header fields, payload length, byte enables, AXI burst conversion, ordering, backpressure, and X/Z behavior.
 
-4. **Protocol and Verification Risks**
+4. **Verification Risks**
    - Identify protocol risks, monitor sampling risks, scoreboard false positives/negatives, race conditions, and coverage/assertion gaps.
 
 5. **Minimal Correction Strategy**
-   - Only if a bug is proven, propose the smallest correction strategy.
-   - Do not provide a broad rewrite unless explicitly requested.
+   - If a bug is proven, propose the smallest correction strategy.
+   - Do not rewrite architecture unless the evidence proves an ownership problem.

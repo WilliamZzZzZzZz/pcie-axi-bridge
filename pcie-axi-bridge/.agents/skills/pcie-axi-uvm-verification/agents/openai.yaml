@@ -1,0 +1,4 @@
+interface:
+  display_name: "PCIe AXI UVM Verification"
+  short_description: "Guide agents for the PCIe AXI bridge UVM project."
+  default_prompt: "Use this skill when developing or reviewing the pcie_axi_master UVM verification environment."

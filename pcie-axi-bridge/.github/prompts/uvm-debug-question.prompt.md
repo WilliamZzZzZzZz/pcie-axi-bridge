@@ -1,27 +1,27 @@
 ---
 agent: "ask"
-description: "Debug a UVM compile, build/connect/run phase, sequence-driver, monitor, scoreboard, or config_db issue."
+description: "Debug a PCIe AXI bridge UVM compile, config_db, sequence-driver, monitor, scoreboard, interface, or simulation issue."
 ---
 
-Analyze this UVM/debug issue as a verification debug reviewer.
+Analyze this PCIe AXI bridge UVM/debug issue as a verification debug reviewer.
 
 Issue, log, code, or file references:
 ${input:issue:Paste the error/log, describe the symptom, or reference relevant files/classes}
 
-Please answer using this format:
+Please answer:
 
 1. **Failure Classification**
-   - Classify as compile/elaboration, factory, config_db, build/connect, run phase, sequence-driver handshake, objection, TLM connection, monitor sampling, scoreboard mismatch, reset/clock sync, or transaction consistency.
+   - Classify as compile/elaboration, package include order, factory, config_db, build/connect, run phase, sequence-driver handshake, TLM connection, interface connection, monitor sampling, scoreboard mismatch, reset/clock sync, or transaction consistency.
 
 2. **Likely Root Cause**
    - Explain the most likely mechanism.
    - Separate evidence from assumptions.
 
 3. **Evidence Needed**
-   - List the specific file paths, classes, methods, signals, log lines, or transaction fields to inspect.
+   - List the exact files, classes, methods, signals, fields, or log lines to inspect.
 
 4. **Code Paths to Inspect**
-   - Identify likely components such as env, agent, sequencer, driver, monitor, scoreboard, sequence, interface, config object, or test.
+   - Identify likely components such as PCIe agent, AXI agent, env, driver, monitor, scoreboard, sequence, interface, config object, or test.
 
 5. **Minimal Debug Experiment**
    - Propose the smallest print, assertion, waveform check, phase check, or focused simulation to confirm the hypothesis.

@@ -5,13 +5,12 @@ applyTo: "**/*.sv,**/*.svh,**/*.v,**/*.vh,**/*.sva,**/*.f,**/*.flist"
 # SystemVerilog and UVM Instructions
 
 - Follow local naming, indentation, macro, package, and filelist conventions.
-- Preserve existing RTL/testbench architecture unless a redesign is explicitly requested.
-- In RTL, check reset behavior, clocking, width/sign handling, combinational defaults, latch risks, blocking/nonblocking usage, FSM completeness, and CDC assumptions.
-- In UVM, keep responsibilities separate: sequences generate intent, drivers drive pins, monitors observe pins, scoreboards check independently, coverage samples meaningful behavior.
-- Use UVM phases correctly: construct hierarchy in build, connect TLM in connect, consume time in run, summarize in check/report.
-- Check `uvm_component_utils`/`uvm_object_utils`, factory overrides, config_db set/get paths, virtual interface propagation, analysis port connections, objections, and sequence-driver item flow.
-- For reset and clocks, avoid sampling unstable signals; align monitor sampling with interface clocking blocks or protocol-valid points.
-- Assertions should state protocol/design intent and should not mask bugs with over-broad assumptions.
-- Coverage should reflect verification goals; avoid coverpoints that only prove stimulus was generated without checking observed DUT behavior.
+- Preserve the PCIe AXI bridge UVM architecture unless a redesign is explicitly requested.
+- Keep PCIe requester/completer naming precise; avoid AXI master/slave language on the PCIe side.
+- Keep first-stage PCIe VIP transaction-layer only: `MRd`, `MWr`, `Cpl`, `CplD`, `TD=0`.
+- Keep `TC`, `Attr`, `requester_id`, `completer_id`, and `tag` explicit in TLP transaction/header handling.
+- In RTL/interface code, check reset behavior, width/sign handling, default assignments, latch risks, and handshake timing.
+- In UVM, keep responsibilities separate: sequences generate intent, drivers drive pins, monitors observe pins, scoreboards check independently, coverage samples verification goals.
+- Use UVM phases correctly: build/connect for structure, run for time-consuming behavior, check/report for summaries.
+- Check factory registration, config_db paths, virtual interface propagation, TLM analysis connections, objections, and sequence-driver item flow.
 - Do not weaken scoreboard comparisons, monitor sampling, or constraints just to make a test pass.
-- Distinguish protocol legality, DUT behavior, VIP behavior, and testbench implementation choices.
