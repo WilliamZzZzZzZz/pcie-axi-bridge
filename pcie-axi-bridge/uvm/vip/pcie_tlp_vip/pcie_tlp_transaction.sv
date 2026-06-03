@@ -35,8 +35,8 @@ class pcie_tlp_transaction extends uvm_sequence_item;
     bit [TLP_HDR_WIDTH-1:0]              tlp_hdr;
     rand bit [2:0]                       tlp_fmt;       //000: 3DW no Data|001: 4DW no Data|010:3DW Data|011: 4DW Data
     rand bit [4:0]                       tlp_type;      //00000: Memory Request
-    rand bit [2:0]                       tc;            //traffic_class(priority), set default:000
-    rand bit [2:0]                       attr;          //attributes
+    rand bit [2:0]                       tc;            //tc(priority), set default:000
+    rand bit [2:0]                       attr;          //attr
     rand bit [1:0]                       address_type;
     rand bit                             lightweight_notification;
     rand bit                             tph_present;
@@ -111,8 +111,8 @@ class pcie_tlp_transaction extends uvm_sequence_item;
 
         tlp_fmt              = tlp_hdr[127:125];
         tlp_type                = tlp_hdr[124:120];
-        traffic_class           = tlp_hdr[118:116];
-        attributes              = {tlp_hdr[114], tlp_hdr[109:108]};
+        tc           = tlp_hdr[118:116];
+        attr              = {tlp_hdr[114], tlp_hdr[109:108]};
         address_type            = tlp_hdr[107:106];
         lightweight_notification = tlp_hdr[113];
         tph_present             = tlp_hdr[112];
@@ -147,14 +147,14 @@ class pcie_tlp_transaction extends uvm_sequence_item;
         tlp_hdr[127:125] = tlp_fmt;
         tlp_hdr[124:120] = tlp_type;
         tlp_hdr[119]     = tag[9];
-        tlp_hdr[118:116] = traffic_class;
+        tlp_hdr[118:116] = tc;
         tlp_hdr[115]     = tag[8];
-        tlp_hdr[114]     = attributes[2];
+        tlp_hdr[114]     = attr[2];
         tlp_hdr[113]     = lightweight_notification;
         tlp_hdr[112]     = tph_present;
         tlp_hdr[111]     = tlp_digest_present;
         tlp_hdr[110]     = poisoned_tlp;
-        tlp_hdr[109:108] = attributes[1:0];
+        tlp_hdr[109:108] = attr[1:0];
         tlp_hdr[107:106] = address_type;
         tlp_hdr[105:96]  = tlp_length_dw[9:0];
 
