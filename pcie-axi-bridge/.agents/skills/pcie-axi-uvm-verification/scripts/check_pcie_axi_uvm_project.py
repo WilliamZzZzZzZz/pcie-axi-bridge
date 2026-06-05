@@ -19,10 +19,45 @@ EXPECTED_DUT_FILES = [
     "dut/pulse_merge.v",
 ]
 
-EXPECTED_PCIE_VIP_FILES = [
-    "uvm/vip/pcie_types.sv",
-    "uvm/vip/pcie_tlp_transaction.sv",
-    "uvm/vip/pcie_tlp_if.sv",
+PCIE_VIP_FILE_CANDIDATES = {
+    "pcie_types.sv": [
+        "uvm/vip/pcie_tlp/pcie_types.sv",
+        "uvm/vip/pcie_types.sv",
+    ],
+    "pcie_tlp_transaction.sv": [
+        "uvm/vip/pcie_tlp/pcie_tlp_transaction.sv",
+        "uvm/vip/pcie_tlp_transaction.sv",
+    ],
+    "pcie_tlp_if.sv": [
+        "uvm/vip/pcie_tlp/pcie_tlp_if.sv",
+        "uvm/vip/pcie_tlp_if.sv",
+    ],
+    "pcie_tlp_pkg.sv": [
+        "uvm/vip/pcie_tlp/pcie_tlp_pkg.sv",
+        "uvm/vip/pcie_tlp_pkg.sv",
+    ],
+    "pcie_req_driver.sv": [
+        "uvm/vip/pcie_tlp/pcie_req_driver.sv",
+        "uvm/vip/pcie_req_driver.sv",
+    ],
+    "pcie_req_monitor.sv": [
+        "uvm/vip/pcie_tlp/pcie_req_monitor.sv",
+        "uvm/vip/pcie_req_monitor.sv",
+    ],
+    "pcie_cpl_monitor.sv": [
+        "uvm/vip/pcie_tlp/pcie_cpl_monitor.sv",
+        "uvm/vip/pcie_cpl_monitor.sv",
+    ],
+    "pcie_tlp_agent.sv": [
+        "uvm/vip/pcie_tlp/pcie_tlp_agent.sv",
+        "uvm/vip/pcie_tlp_agent.sv",
+    ],
+}
+
+REQUIRED_PCIE_VIP_FILES = [
+    "pcie_types.sv",
+    "pcie_tlp_transaction.sv",
+    "pcie_tlp_if.sv",
 ]
 
 EXPECTED_TYPE_TOKENS = [
@@ -72,6 +107,32 @@ def has_declared_identifier(text: str, name: str) -> bool:
     return re.search(pattern, text) is not None
 
 
+def first_existing(root: Path, candidates: list[str]) -> Path | None:
+    for rel in candidates:
+        path = root / rel
+        if path.exists():
+            return path
+    return None
+
+
+def relpath(path: Path, root: Path) -> str:
+    return str(path.relative_to(root))
+
+
+def check_forbidden_tokens(
+    *,
+    text: str,
+    path: Path,
+    root: Path,
+    tokens: list[str],
+    errors: list[str],
+    context: str,
+) -> None:
+    for token in tokens:
+        if re.search(rf"\b{re.escape(token)}\b", text):
+            errors.append(f"{relpath(path, root)} contains forbidden {context} token: {token}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -90,19 +151,29 @@ def main() -> int:
         print(f"ERROR: project root does not exist: {root}")
         return 2
 
-    for rel in EXPECTED_DUT_FILES + EXPECTED_PCIE_VIP_FILES:
+    for rel in EXPECTED_DUT_FILES:
         if not (root / rel).exists():
             errors.append(f"missing expected file: {rel}")
 
-    pcie_types = root / "uvm/vip/pcie_types.sv"
-    if pcie_types.exists():
+    pcie_files = {
+        name: first_existing(root, candidates)
+        for name, candidates in PCIE_VIP_FILE_CANDIDATES.items()
+    }
+
+    for name in REQUIRED_PCIE_VIP_FILES:
+        if pcie_files[name] is None:
+            candidates = ", ".join(PCIE_VIP_FILE_CANDIDATES[name])
+            errors.append(f"missing expected PCIe VIP file {name}; checked: {candidates}")
+
+    pcie_types = pcie_files["pcie_types.sv"]
+    if pcie_types and pcie_types.exists():
         text = read_text(pcie_types)
         for token in EXPECTED_TYPE_TOKENS:
             if token not in text:
                 warnings.append(f"pcie_types.sv does not contain expected token: {token}")
 
-    pcie_if = root / "uvm/vip/pcie_tlp_if.sv"
-    if pcie_if.exists():
+    pcie_if = pcie_files["pcie_tlp_if.sv"]
+    if pcie_if and pcie_if.exists():
         text = read_text(pcie_if)
         for signal in EXPECTED_IF_SIGNALS:
             if not re.search(rf"\b{re.escape(signal)}\b", text):
@@ -112,8 +183,8 @@ def main() -> int:
         if "modport host" not in text:
             warnings.append("pcie_tlp_if.sv has no host/requester modport")
 
-    pcie_tr = root / "uvm/vip/pcie_tlp_transaction.sv"
-    if pcie_tr.exists():
+    pcie_tr = pcie_files["pcie_tlp_transaction.sv"]
+    if pcie_tr and pcie_tr.exists():
         text = read_text(pcie_tr)
         for name in ("traffic_class", "attributes"):
             if re.search(rf"\b{name}\b", text) and not has_declared_identifier(text, name):
@@ -126,6 +197,55 @@ def main() -> int:
             errors.append("pcie_tlp_transaction.sv missing unpack_header()")
         if "tlp_digest_present" in text and "constraint c_digest" not in text:
             warnings.append("digest field exists but no c_digest constraint was found")
+        if pcie_types and pcie_types.exists():
+            type_text = read_text(pcie_types)
+            if "pcie_tlp_kind_enum" in type_text and re.search(r"}\s*pcie_tlp_kind_e\s*;", text):
+                errors.append(
+                    "pcie_tlp_transaction.sv defines pcie_tlp_kind_e while pcie_types.sv already defines pcie_tlp_kind_enum"
+                )
+
+    pcie_pkg = pcie_files["pcie_tlp_pkg.sv"]
+    if pcie_pkg and pcie_pkg.exists():
+        text = read_text(pcie_pkg)
+        if re.search(r"`include\s+\"pcie_tlp_if\.sv\"", text):
+            errors.append("pcie_tlp_pkg.sv includes pcie_tlp_if.sv; compile interfaces outside packages")
+
+    pcie_req_driver = pcie_files["pcie_req_driver.sv"]
+    if pcie_req_driver and pcie_req_driver.exists():
+        text = read_text(pcie_req_driver)
+        check_forbidden_tokens(
+            text=text,
+            path=pcie_req_driver,
+            root=root,
+            tokens=["uvm_analysis_port", "scoreboard", "ref_mem", "reference_mem"],
+            errors=errors,
+            context="driver anti-pattern",
+        )
+        for driven_signal in ("rx_req_tlp_valid", "rx_req_tlp_ready"):
+            if driven_signal not in text:
+                warnings.append(f"pcie_req_driver.sv does not mention {driven_signal}")
+        if "tx_cpl_tlp_ready" not in text:
+            warnings.append("pcie_req_driver.sv does not mention tx_cpl_tlp_ready")
+
+    for name in (
+        "pcie_types.sv",
+        "pcie_tlp_transaction.sv",
+        "pcie_req_driver.sv",
+        "pcie_req_monitor.sv",
+        "pcie_cpl_monitor.sv",
+        "pcie_tlp_agent.sv",
+    ):
+        path = pcie_files[name]
+        if path and path.exists():
+            text = read_text(path)
+            check_forbidden_tokens(
+                text=text,
+                path=path,
+                root=root,
+                tokens=["axi_transaction", "axi_pkg", "pcie_axi_scoreboard"],
+                errors=errors,
+                context="protocol-VIP ownership",
+            )
 
     dut = root / "dut/pcie_axi_master.v"
     if dut.exists():
@@ -161,4 +281,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -52,3 +52,6 @@ uvm/sim/*.vdb
 # Python regression reports; keep reports/.gitkeep tracked.
 reports/regress_summary_*.md
 reports/regress_results_*.csv
+
+._*
+**/._*

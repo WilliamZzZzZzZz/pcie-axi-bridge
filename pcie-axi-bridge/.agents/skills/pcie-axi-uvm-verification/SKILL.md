@@ -20,7 +20,10 @@ Then read only the reference needed for the task:
 - `references/project-map.md`: project paths, existing architecture, migration status
 - `references/pcie-dut-model.md`: DUT model, PCIe TLP subset, header mapping, scoreboard expectations
 - `references/uvm-implementation-rules.md`: UVM coding rules, VIP ownership, file/package migration workflow
+- `references/commercial-uvm-vip-rules.md`: commercial VIP architecture discipline, ownership boundaries, and anti-patterns
 - `references/agent-discipline.md`: Karpathy-inspired agent discipline adapted to this PCIe/UVM project
+
+For any request that asks for UVM architecture, VIP structure, component ownership, or code generation, load `references/commercial-uvm-vip-rules.md` before proposing or editing code.
 
 ## Non-Negotiable Model
 
@@ -45,12 +48,15 @@ The DUT is a generic PCIe TLP-to-AXI bridge. It is not a full PCIe controller, P
 ## Work Rules
 
 - Distinguish facts observed in files from PCIe/UVM inferences.
+- Treat this as a portfolio-grade verification environment: prefer commercial-standard UVM/VIP architecture over shortcuts that merely run.
+- If the user's requested structure conflicts with standard VIP ownership, state the conflict and propose the closest standard architecture before writing code.
 - Apply the Karpathy-inspired discipline in `references/agent-discipline.md`: surface assumptions, prefer simple code, keep diffs surgical, and define verification criteria before claiming completion.
 - Do not add full PCIe physical link behavior unless the user asks for a different DUT.
 - Keep PCIe side transaction-layer only: `MRd`, `MWr`, `Cpl`, `CplD`, optional unsupported-request checks.
 - Keep Digest/ECRC disabled in first-stage VIP: `TD=0`.
 - Keep `TC`, `Attr`, `requester_id`, and `tag` as real header fields; do not collapse them into informal metadata.
 - Reuse the existing AXI VIP for the downstream AXI slave/memory side when possible.
+- Keep protocol VIPs reusable: put DUT-specific bridge prediction, reference memory, pending-read tables, and end-to-end checking in the `pcie_axi_env` layer, not inside `pcie_tlp_vip` or `axi_vip`.
 - When changing code, make small reviewable diffs and run the available compile/smoke path if practical.
 
 ## Validation Priority

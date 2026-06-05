@@ -53,8 +53,6 @@ uvm/vip/pcie_tlp_transaction.sv
 uvm/vip/pcie_tlp_if.sv
 ```
 
-Known issue observed in the local project: `pcie_tlp_transaction.sv` defines fields named `tc` and `attr`, but `pack_header()` and `unpack_header()` may refer to `traffic_class` and `attributes`. Fix by using one naming scheme consistently; prefer `tc` and `attr` to match `pcie_types.sv` and DUT field names.
-
 ## Package Direction
 
 The clean target is usually:
@@ -67,4 +65,3 @@ uvm/testbench/pcie_axi_master_tb.sv
 ```
 
 Avoid mixing all PCIe classes into `axi_pkg.sv`. Keep protocol VIPs separate.
-
